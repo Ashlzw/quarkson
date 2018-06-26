@@ -257,6 +257,10 @@ static void test_parse_object()
 	}
 }
 
+static void test_generator()
+{
+}
+
 static void test_parse()
 {
 	test_parse_null();
