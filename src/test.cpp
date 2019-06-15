@@ -280,5 +280,8 @@ int main()
 
 	std::cout << test_pass << "/" << test_count << " (" << std::setprecision(3) << test_pass * 100.0 / test_count << ") passed" << std::endl;
 	system("PAUSE");
+
+	std::vector<char> vec;
+
 	return main_ret;
 }
