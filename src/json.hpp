@@ -54,8 +54,9 @@ public:
 	void convert_to_object_add(const object &);
 	void convert_to_object_add(object&&);
 
-private:
 	const shared_ptr<json_value> get() const { return data_; }
+
+private:
 	shared_ptr<json_value> data_;
 };
 

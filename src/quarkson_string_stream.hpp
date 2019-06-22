@@ -11,14 +11,14 @@ class GenericStringBuffer
 public:
 	static const size_t kDefaultBufferSize = 1024;
 
-	explicit GenericStringBuffer(const Allocator & alloc) : _alloc(&alloc) {}
+	explicit GenericStringBuffer(const Allocator & alloc = Allocator()) : _alloc(alloc), _start(0), _end(0), _tail(0) {}
 	~GenericStringBuffer()
 	{
 		FreeMemory();
 	}
 
 	GenericStringBuffer(const GenericStringBuffer & rhs) = delete;
-	GenericStringBuffer& ioperator = (const GenericStringBuffer & rhs) = delete;
+	GenericStringBuffer& operator = (const GenericStringBuffer & rhs) = delete;
 
 	GenericStringBuffer(GenericStringBuffer&& rhs)
 	{
@@ -52,6 +52,8 @@ public:
 			ExtendMemory();
 			*_end = c;
 		}
+
+		++_end;
 	}
 	//void PushBack(Ch&& c);
 
@@ -60,13 +62,16 @@ public:
 		while (RemainSpace() < append_buf.GetCapacity()) ExtendMemory();
 
 		memcpy(_end, append_buf._start, append_buf.GetCapacity());
+		_end += append_buf.GetCapacity();
 	}
 
 	void Append(const Ch* start, const Ch* end)
 	{
 		while (RemainSpace() < (end - start)) ExtendMemory();
 
-		memcpy(_end, append_buf._start, append_buf.GetCapacity());
+		memcpy(_end, start, end - start);
+
+		_end += (end - start);
 	}
 
 	void ShrinkToFit()
@@ -80,14 +85,15 @@ public:
 	void Clear()
 	{
 		_end = _start;
-		_tail = _start;
 	}
 
-	size_t GetCapacity() const { return _tail - _start };
-	size_t GetSize() const { return _end - _start };
+	size_t GetCapacity() const { return _tail - _start; }
+	size_t GetSize() const { return _end - _start; }
 	size_t GetLength() const { return GetCapacity() / sizeof(Ch); }
 
-	size_t RemainSpace() const { return _tail - _end - 1; }
+	size_t RemainSpace() const { return _tail - _end; }
+
+	std::basic_string<Encoding> ToString() const { return std::basic_string<Encoding>(_start, _end); }
 
 private:
 	void SetNull()
@@ -102,7 +108,7 @@ private:
 		Ch* p = _start;
 		size_t n = GetCapacity();
 		SetNull();
-		_alloc->deallocate(p, n);
+		_alloc.deallocate(p, n);
 	}
 
 	void ExtendMemory()
@@ -117,22 +123,28 @@ private:
 
 	void ResizeMemory(size_t next_size)
 	{
-		Ch* p = _alloc.allocate(next_size);
-		try
+		size_t current_size = GetSize();
+
+		if (current_size <= next_size)
 		{
-			FreeMemory();
-			_start = p;
-			_end = p + current_size;
-			_tail = p + next_size;
-		}
-		catch (const std::exception& e)
-		{
-			std::cout << e.what();
-			_alloc.deallocate(p, next_size);
+			Ch* p = _alloc.allocate(next_size);
+			try
+			{
+				memcpy(p, _start, current_size);
+				FreeMemory();
+				_start = p;
+				_end = p + current_size;
+				_tail = p + next_size;
+			}
+			catch (const std::exception& e)
+			{
+				std::cout << e.what();
+				_alloc.deallocate(p, next_size);
+			}
 		}
 	}
 
-	Allocator* _alloc;
+	Allocator _alloc;
 	Ch* _start;
 	Ch* _end;
 	Ch* _tail;

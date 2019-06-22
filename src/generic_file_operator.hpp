@@ -1,29 +1,24 @@
 #pragma once
 
-#include <memory>
+namespace quarkson
+{
 
 class FileOperator
 {
 public:
-	FileOperator();
-	~FileOperator();
+	FileOperator() {}
+	virtual ~FileOperator() = 0;
 
 	virtual void FileOpen() = 0;
 	virtual void FileClose() = 0;
 	virtual void FileRead(char *buf, size_t buf_len) = 0;
 	virtual void FileWrite(const char* buf, size_t buf_len) = 0;
-	virtual void FileWriteAsync(const char* buf, size_t buf_len) = 0;
-	virtual void FileReadAsync(char* buf, size_t buf_len) = 0;
+	virtual int FileWriteAsync(const char* buf, size_t buf_len) = 0;
+	virtual int FileReadAsync(char* buf, size_t buf_len) = 0;
 	virtual void Flush() = 0;
 
 private:
 
 };
 
-FileOperator::FileOperator()
-{
-}
-
-FileOperator::~FileOperator()
-{
 }

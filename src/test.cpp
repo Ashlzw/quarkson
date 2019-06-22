@@ -1,9 +1,12 @@
 #include <iostream>
 #include <iomanip>
 #include <cstdio>
+#include <sstream>
 
 #include "json.hpp"
 #include "quarkson_parser.hpp"
+#include "quarkson_generator.hpp"
+#include "quarkson_string_stream.hpp"
 
 using std::cout;
 using std::endl;
@@ -11,6 +14,8 @@ using std::endl;
 using quarkson::json;
 using quarkson::json_value;
 using quarkson::parser;
+using quarkson::GenericStringBuffer;
+using quarkson::Generator;
 
 static int main_ret = 0;
 static int test_count = 0;
@@ -259,6 +264,17 @@ static void test_parse_object()
 
 static void test_generator()
 {
+	json j = parser::parse("{ \"Image\": { \"Width\": 800, \"Height\": 600, \"Title\": \"View from 15th Floor\", \"Thumbnail\": { \"Url\": \"http:\\/\\/www.example.com\\/image\\/481989943\", \"Height\": 125, \"Width\": 100 }, \"Animated\" : false, \"IDs\": [116, 943, 234, 38793] } }");
+
+	GenericStringBuffer<> generate_ret;
+
+	Generator<GenericStringBuffer<>, char> generator(generate_ret);
+
+	generator.Generate(j);
+
+	std::string ret = generate_ret.ToString();
+
+	std::cout << ret << std::endl;
 }
 
 static void test_parse()
@@ -276,12 +292,16 @@ static void test_parse()
 
 int main()
 {
-	test_parse();
+	//test_parse();
 
-	std::cout << test_pass << "/" << test_count << " (" << std::setprecision(3) << test_pass * 100.0 / test_count << ") passed" << std::endl;
-	system("PAUSE");
+	//std::cout << test_pass << "/" << test_count << " (" << std::setprecision(3) << test_pass * 100.0 / test_count << ") passed" << std::endl;
+	//system("PAUSE");
+
+	std::stringstream ss;
 
 	std::vector<char> vec;
+
+	test_generator();
 
 	return main_ret;
 }
