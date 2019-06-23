@@ -7,6 +7,8 @@
 #include "quarkson_parser.hpp"
 #include "quarkson_generator.hpp"
 #include "quarkson_string_stream.hpp"
+#include "quarkson_file_write_stream.hpp"
+#include "simple_file_operator.hpp"
 
 using std::cout;
 using std::endl;
@@ -16,6 +18,9 @@ using quarkson::json_value;
 using quarkson::parser;
 using quarkson::GenericStringBuffer;
 using quarkson::Generator;
+using quarkson::GenericFileWriteStream;
+using quarkson::FileOperator;
+using quarkson::SimpleFileOperator;
 
 static int main_ret = 0;
 static int test_count = 0;
@@ -265,16 +270,25 @@ static void test_parse_object()
 static void test_generator()
 {
 	json j = parser::parse("{ \"Image\": { \"Width\": 800, \"Height\": 600, \"Title\": \"View from 15th Floor\", \"Thumbnail\": { \"Url\": \"http:\\/\\/www.example.com\\/image\\/481989943\", \"Height\": 125, \"Width\": 100 }, \"Animated\" : false, \"IDs\": [116, 943, 234, 38793] } }");
+#if 1
+	GenericStringBuffer<> *generate_ret = new GenericStringBuffer<>();
 
-	GenericStringBuffer<> generate_ret;
-
-	Generator<GenericStringBuffer<>, char> generator(generate_ret);
+	Generator<GenericStringBuffer<>, char> generator = Generator<GenericStringBuffer<>, char>(std::shared_ptr<GenericStringBuffer<>>(generate_ret));
 
 	generator.Generate(j);
 
-	std::string ret = generate_ret.ToString();
+	std::string ret = generate_ret->ToString();
 
 	std::cout << ret << std::endl;
+
+#endif
+#if 0
+	Generator<GenericFileWriteStream<>, char> generator(std::shared_ptr<GenericFileWriteStream<>>(new GenericFileWriteStream<>(SimpleFileOperator::CreateSimpleFileOperator("F:\\wangyi\\json\\test.json"))));
+
+	generator.Generate(j);
+#endif // 0
+
+	return;
 }
 
 static void test_parse()
@@ -292,16 +306,17 @@ static void test_parse()
 
 int main()
 {
-	//test_parse();
+	test_parse();
 
-	//std::cout << test_pass << "/" << test_count << " (" << std::setprecision(3) << test_pass * 100.0 / test_count << ") passed" << std::endl;
-	//system("PAUSE");
+	std::cout << test_pass << "/" << test_count << " (" << std::setprecision(3) << test_pass * 100.0 / test_count << ") passed" << std::endl;
 
 	std::stringstream ss;
 
 	std::vector<char> vec;
 
 	test_generator();
+
+	//system("PAUSE");
 
 	return main_ret;
 }

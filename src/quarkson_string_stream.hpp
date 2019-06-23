@@ -9,8 +9,6 @@ class GenericStringBuffer
 {
 	typedef typename Encoding Ch;
 public:
-	static const size_t kDefaultBufferSize = 1024;
-
 	explicit GenericStringBuffer(const Allocator & alloc = Allocator()) : _alloc(alloc), _start(0), _end(0), _tail(0) {}
 	~GenericStringBuffer()
 	{

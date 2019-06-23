@@ -151,7 +151,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="quarkson.cpp" />
+    <ClCompile Include="..\..\..\..\src\json.cpp" />
+    <ClCompile Include="..\..\..\..\src\quarkson_file_write_stream.cpp" />
+    <ClCompile Include="..\..\..\..\src\quarkson_generator.cpp" />
+    <ClCompile Include="..\..\..\..\src\quarkson_parser.cpp" />
+    <ClCompile Include="..\..\..\..\src\quarkson_string_stream.cpp" />
+    <ClCompile Include="..\..\..\..\src\simple_file_operator.cpp" />
+    <ClCompile Include="..\..\..\..\src\test.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\src\json.hpp" />
+    <ClInclude Include="..\..\..\..\src\quarkson_file_operator.hpp" />
+    <ClInclude Include="..\..\..\..\src\quarkson_file_write_stream.hpp" />
+    <ClInclude Include="..\..\..\..\src\quarkson_generator.hpp" />
+    <ClInclude Include="..\..\..\..\src\quarkson_parser.hpp" />
+    <ClInclude Include="..\..\..\..\src\quarkson_string_stream.hpp" />
+    <ClInclude Include="..\..\..\..\src\simple_file_operator.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

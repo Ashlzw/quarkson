@@ -1,3 +1,4 @@
+#pragma once
 #include <memory>
 #include <stack>
 #include <sstream>
@@ -6,16 +7,18 @@
 
 namespace quarkson {
 
-	const std::string true_str = "true";
-	const std::string false_str = "false";
-	const std::string null_str = "null";
+const std::string true_str = "true";
+const std::string false_str = "false";
+const std::string null_str = "null";
 
 template<typename OutputStream, typename TargetEncoding>
 class Generator
 {
 public:
-	Generator(OutputStream &stream) : _stream(&stream) {}
-	Generator(std::shared_ptr<OutputStream> &stream) : _stream(stream) {}
+	Generator(const std::shared_ptr<OutputStream> &stream) : _stream(stream) {}
+	~Generator()
+	{
+	}
 
 	void Generate(const json& json_data)
 	{
@@ -216,6 +219,7 @@ private:
 	}
 
 	std::shared_ptr<OutputStream> _stream;
+	//OutputStream* _stream;
 };
 
 }
