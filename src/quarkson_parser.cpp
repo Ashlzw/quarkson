@@ -53,7 +53,7 @@ shared_ptr<json_value> quarkson::parser::parse_object()
 	if (*p++ == '{')
 		skip_space();
 	else
-		json_value::error_instance();
+		return json_value::error_instance();
 
 	if (*p == '}')
 	{
@@ -98,7 +98,7 @@ shared_ptr<json_value> parser::parse_array()
 	if (*p++ == '[')
 		skip_space();
 	else
-		json_value::error_instance();
+		return json_value::error_instance();
 
 	if (*p == ']')
 	{
@@ -212,28 +212,65 @@ shared_ptr<json_value> quarkson::parser::parse_number()
 {
 	const char *c = p;
 	char *e;
-	if (*c == '-') ++c;
+	int64_t i64 = 0;
+	bool is_miuns = false;
+	bool use_double = false;
+	if (*c == '-')
+	{
+		++c;
+		is_miuns = true;
+	}
 
 	if (*c == '0') ++c;
 	else if (isdigit1to9(*c))
 	{
 		do
 		{
+			i64 = i64 * 10 + static_cast<unsigned>(*c - '0');
 			++c;
+
+			if (i64 > MAX_SIGNAL_LL || *c == '.')
+			{
+				use_double = true;
+				break;
+			}
 		} while (isdigit(*c));
 	}
 	else return json_value::error_instance();
 
 	if (*c == '.')
-	{
-		do
-		{
-			++c;
-		} while (isdigit(*c));
-	}
+		use_double = true;
 
-	if (*c != 'e' || *c != 'E')
+	if (use_double)
 	{
+		if (*c == '.')
+		{
+			do
+			{
+				++c;
+			} while (isdigit(*c));
+		}
+
+		if (*c != 'e' && *c != 'E')
+		{
+			errno = 0;
+			double num = std::strtod(p, &e);
+			if (errno != ERANGE)
+			{
+				p = e;
+				return json_value::number_instance(num);
+			}
+			else
+				return json_value::error_instance();
+		}
+		else
+		{
+			do
+			{
+				++c;
+			} while (isdigit(*c) || *c == '+' || *c == '-');
+		}
+
 		errno = 0;
 		double num = std::strtod(p, &e);
 		if (errno != ERANGE)
@@ -246,21 +283,9 @@ shared_ptr<json_value> quarkson::parser::parse_number()
 	}
 	else
 	{
-		do
-		{
-			++c;
-		} while (isdigit(*c) || *c == '+' || *c == '-');
+		p = c;
+		return is_miuns ? json_value::number_instance(-i64) : json_value::number_instance(i64);
 	}
-
-	errno = 0;
-	double num = std::strtod(p, &e);
-	if (errno != ERANGE)
-	{
-		p = e;
-		return json_value::number_instance(num);
-	}
-	else
-		return json_value::error_instance();
 }
 
 shared_ptr<json_value> quarkson::parser::parse_literal()

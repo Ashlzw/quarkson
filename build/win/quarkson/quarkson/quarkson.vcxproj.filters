@@ -36,6 +36,9 @@
     <ClCompile Include="..\..\..\..\src\simple_file_operator.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\quarkson_file_operator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\src\json.hpp">
@@ -57,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\quarkson_file_operator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\quarkson_file_read_stream.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -3,7 +3,7 @@
 #include "json.hpp"
 
 namespace quarkson {
-
+	const uint64_t MAX_SIGNAL_LL = 0x0fffffffffffffffull;
 class parser
 {
 public:
@@ -32,6 +32,20 @@ public:
 
 	const char *s;
 	const char *p;
+};
+
+template <typename InputStream, typename TargetEncoding>
+class Parser
+{
+public:
+	Parser(const std::shared_ptr<InputStream> &stream) : _stream(stream) {}
+
+	json Parse()
+	{
+		return parser::parse(_stream->GetString());
+	}
+private:
+	std::shared_ptr<InputStream> _stream;
 };
 
 }

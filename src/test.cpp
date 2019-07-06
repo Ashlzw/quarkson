@@ -1,7 +1,12 @@
+#pragma warning(disable : 4996)
+
 #include <iostream>
 #include <iomanip>
 #include <cstdio>
 #include <sstream>
+#include <fstream>
+#include <chrono>
+#include <algorithm>
 
 #include "json.hpp"
 #include "quarkson_parser.hpp"
@@ -9,6 +14,7 @@
 #include "quarkson_string_stream.hpp"
 #include "quarkson_file_write_stream.hpp"
 #include "simple_file_operator.hpp"
+#include "quarkson_file_read_stream.hpp"
 
 using std::cout;
 using std::endl;
@@ -21,6 +27,10 @@ using quarkson::Generator;
 using quarkson::GenericFileWriteStream;
 using quarkson::FileOperator;
 using quarkson::SimpleFileOperator;
+using quarkson::Parser;
+using quarkson::GenericFileReadStream;
+using quarkson::FileOperatorMode;
+
 
 static int main_ret = 0;
 static int test_count = 0;
@@ -101,6 +111,8 @@ static void test_parse_number()
 	TEST_NUMBER(5, "5");
 	TEST_NUMBER(6, "6");
 	TEST_NUMBER(23, "23");
+	TEST_NUMBER(1152921504606846974ll, "1152921504606846974");
+	TEST_NUMBER(9223372036854775808ull, "9223372036854775808");
 
 	TEST_NUMBER(4.9e-324, "4.9e-324"); // Min. subnormal positive double
 	TEST_NUMBER(2.2250738585072009e-308, "2.2250738585072009e-308"); // Max. subnormal double
@@ -291,6 +303,110 @@ static void test_generator()
 	return;
 }
 
+static void test_file_read_parse(size_t mark, size_t cnt)
+{
+
+#if 1
+	{
+		double min_time = -1;
+		double max_time = -1;
+		auto total_start = std::chrono::system_clock::now();
+		for (size_t i = 0; i < mark; ++i)
+		{
+			for (size_t j = 0; j < cnt; ++j)
+			{
+				auto j_start = std::chrono::system_clock::now();
+				Parser<GenericFileReadStream<>, char> parse_test(std::shared_ptr<GenericFileReadStream<>>(new GenericFileReadStream<>(SimpleFileOperator::CreateSimpleFileOperator("F:\\wangyi\\test_data\\json_data\\json_benchmark-master\\data\\canada.json", FileOperatorMode::FILE_READ))));
+				parse_test.Parse();
+				auto j_end = std::chrono::system_clock::now();
+				std::chrono::duration<double> elapsed_seconds = j_end - j_start;
+				min_time = min_time < 0 ? elapsed_seconds.count() : std::min(min_time, elapsed_seconds.count());
+				max_time = max_time < 0 ? elapsed_seconds.count() : std::max(min_time, elapsed_seconds.count());
+			}
+		}
+		auto total_end = std::chrono::system_clock::now();
+		std::chrono::duration<double> large_total_seconds = total_end - total_start;
+		std::chrono::duration<double> large_average_elapsed_seconds = (total_end - total_start) / (mark * cnt);
+
+		FILE *fp = fopen("F:\\wangyi\\test_data\\json_data\\json_benchmark-master\\data\\result.large.txt", "wb");
+		char large_tmp[1000] = { 0 };
+		sprintf(large_tmp, "Large File Read : In %d times read\r\nMin Elapsed Time : %f\r\nMin Elapsed Time : %f\r\nAverage Elapsed Time : %f\r\nTotal Elapsed Time : %f", cnt, min_time, max_time, large_average_elapsed_seconds, large_total_seconds.count());
+		fwrite(large_tmp, sizeof(char), strlen(large_tmp), fp);
+		fclose(fp);
+	}
+
+	{
+		typedef std::string::value_type char_t;
+		typedef std::istreambuf_iterator<char_t> iterator_t;
+
+		std::ifstream ifs("F:\\wangyi\\test_data\\json_data\\json_benchmark-master\\data\\canada.json");
+		std::string json_str = std::string(iterator_t(ifs), iterator_t());
+
+		double min_time = -1;
+		double max_time = -1;
+		auto total_start = std::chrono::system_clock::now();
+		for (size_t i = 0; i < mark; ++i)
+		{
+			for (size_t j = 0; j < cnt; ++j)
+			{
+				auto j_start = std::chrono::system_clock::now();
+				parser::parse(json_str);
+				auto j_end = std::chrono::system_clock::now();
+				std::chrono::duration<double> elapsed_seconds = j_end - j_start;
+				min_time = min_time < 0 ? elapsed_seconds.count() : std::min(min_time, elapsed_seconds.count());
+				max_time = max_time < 0 ? elapsed_seconds.count() : std::max(min_time, elapsed_seconds.count());
+			}
+		}
+		auto total_end = std::chrono::system_clock::now();
+		std::chrono::duration<double> total_seconds = total_end - total_start;
+		std::chrono::duration<double> average_elapsed_seconds = (total_end - total_start) / (mark * cnt);
+
+		FILE* fp = fopen("F:\\wangyi\\test_data\\json_data\\json_benchmark-master\\data\\result.memory.large.txt", "wb");
+		char large_tmp[1000] = { 0 };
+		sprintf(large_tmp, "Large File Read : In %d times read\r\nMin Elapsed Time : %f\r\nMin Elapsed Time : %f\r\nAverage Elapsed Time : %f\r\nTotal Elapsed Time : %f", cnt, min_time, max_time, average_elapsed_seconds, total_seconds.count());
+		fwrite(large_tmp, sizeof(char), strlen(large_tmp), fp);
+		fclose(fp);
+	}
+
+	{
+		std::vector<std::string> jsons;
+		std::ifstream ifs("F:\\wangyi\\test_data\\json_data\\json_benchmark-master\\data\\one-json-per-line.jsons");
+		for (std::string line; std::getline(ifs, line); )
+			jsons.push_back(line);
+
+		double min_time = -1;
+		double max_time = -1;
+		auto total_start = std::chrono::system_clock::now();
+		for (size_t i = 0; i < mark; ++i)
+		{
+			for (size_t j = 0; j < cnt; ++j)
+			{
+				for (const auto& s : jsons)
+				{
+					auto j_start = std::chrono::system_clock::now();
+					parser::parse(s);
+					auto j_end = std::chrono::system_clock::now();
+					std::chrono::duration<double> elapsed_seconds = j_end - j_start;
+					min_time = min_time < 0 ? elapsed_seconds.count() : std::min(min_time, elapsed_seconds.count());
+					max_time = max_time < 0 ? elapsed_seconds.count() : std::max(min_time, elapsed_seconds.count());
+				}
+			}
+		}
+		auto total_end = std::chrono::system_clock::now();
+		std::chrono::duration<double> small_total_seconds = total_end - total_start;
+		std::chrono::duration<double> small_average_elapsed_seconds = (total_end - total_start) / (mark * cnt * jsons.size());
+
+		FILE* fp1 = fopen("F:\\wangyi\\test_data\\json_data\\json_benchmark-master\\data\\result.small.txt", "wb");
+		char small_tmp[1000] = { 0 };
+		sprintf(small_tmp, "Large File Read : In %d times read\r\nMin Elapsed Time : %f\r\nMin Elapsed Time : %f\r\nAverage Elapsed Time : %f\r\nTotal Elapsed Time : %f", cnt, min_time, max_time, small_average_elapsed_seconds, small_total_seconds.count());
+		fwrite(small_tmp, sizeof(char), strlen(small_tmp), fp1);
+		fclose(fp1);
+	}
+#endif // 1
+
+
+}
+
 static void test_parse()
 {
 	test_parse_null();
@@ -304,19 +420,20 @@ static void test_parse()
 #endif // 0
 }
 
+std::size_t max_marks = 2; // 10;
+std::size_t max_cnt = 1000;
+
 int main()
 {
-	test_parse();
+	//test_parse();
 
-	std::cout << test_pass << "/" << test_count << " (" << std::setprecision(3) << test_pass * 100.0 / test_count << ") passed" << std::endl;
+	//std::cout << test_pass << "/" << test_count << " (" << std::setprecision(3) << test_pass * 100.0 / test_count << ") passed" << std::endl;
 
-	std::stringstream ss;
-
-	std::vector<char> vec;
-
-	test_generator();
+	//test_generator();
 
 	//system("PAUSE");
+
+	test_file_read_parse(max_marks, max_cnt);
 
 	return main_ret;
 }
